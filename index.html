@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>回憶拼貼 · 把大家的祝福拼成一張</title>
+<style>
+@font-face{font-family:'LXGW';src:url('assets/font/LXGW.ttf') format('truetype');font-display:swap;}
+:root{
+  --kraft:#c9b896; --kraft-d:#b3a079; --paper:#efe6d2; --ink:#4a3326; --ink2:#7a5b44;
+  --tape:#d9c7a0; --tape2:#e7b9b0; --accent:#bb6b4e; --sage:#9aa885;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:'LXGW','PingFang TC','Noto Serif TC',serif;color:var(--ink)}
+body{
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,.06), transparent 60%),
+    repeating-linear-gradient(45deg, #b8a47f 0 2px, #b09c75 2px 4px),
+    #b09c75;
+  overflow:hidden;
+}
+/* ---- top bar ---- */
+#bar{position:fixed;top:0;left:0;right:0;height:54px;display:flex;align-items:center;gap:14px;
+  padding:0 16px;background:linear-gradient(#5a4632,#4a3729);color:#f3e9d6;z-index:200;
+  box-shadow:0 3px 10px rgba(0,0,0,.3)}
+#bar .logo{font-size:20px;font-weight:bold;letter-spacing:1px}
+#bar .logo small{font-size:12px;opacity:.7;margin-left:8px;font-weight:normal}
+#bar .sp{flex:1}
+.tape-btn{position:relative;border:0;cursor:pointer;font-family:inherit;font-size:15px;color:#3a2b1e;
+  padding:9px 18px;background:var(--tape);box-shadow:1px 2px 4px rgba(0,0,0,.25);
+  transform:rotate(-1deg);transition:.15s}
+.tape-btn:hover{transform:rotate(0) translateY(-1px)}
+.tape-btn.pink{background:var(--tape2)}
+.tape-btn.go{background:var(--accent);color:#fff;font-weight:bold;transform:rotate(0)}
+.badge{font-size:12px;color:#e9dcc2;opacity:.85;display:flex;align-items:center;gap:5px}
+/* ---- layout ---- */
+#app{position:fixed;top:54px;left:0;right:0;bottom:0;display:flex}
+#side{width:268px;background:rgba(74,55,41,.92);color:#efe6d2;padding:16px;overflow:auto;flex-shrink:0}
+#side h3{margin:18px 0 8px;font-size:14px;color:#e7c98f;border-bottom:1px dashed #8a7252;padding-bottom:5px}
+#side h3:first-child{margin-top:0}
+.row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:6px}
+.chip{padding:7px 11px;background:#5e4733;border:1px solid #836a4d;border-radius:7px;cursor:pointer;font-size:13px;color:#f0e6d2}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.fld{width:100%;padding:8px;margin:4px 0;border:1px solid #836a4d;border-radius:6px;background:#5e4733;color:#fff;font-family:inherit;font-size:14px}
+.hint{font-size:11.5px;color:#cdbb9c;line-height:1.5;margin:6px 0}
+.bgthumb{width:70px;height:48px;border-radius:5px;border:2px solid transparent;cursor:pointer;object-fit:cover;background:#d8cbb0}
+.bgthumb.on{border-color:var(--accent)}
+/* ---- stage ---- */
+#wrap{flex:1;position:relative;overflow:auto;display:flex;justify-content:center;align-items:flex-start;padding:24px}
+#stage{position:relative;transform-origin:top center;background:var(--paper);
+  box-shadow:0 14px 50px rgba(0,0,0,.45)}
+.ph{position:absolute;cursor:grab;background:#fffdf7;box-shadow:2px 5px 11px rgba(40,28,18,.4);user-select:none;touch-action:none}
+.ph img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.ph.sel{outline:3px solid #2b8cff;outline-offset:2px;z-index:9000!important}
+.txt{position:absolute;cursor:grab;user-select:none;touch-action:none;text-align:center;line-height:1.25;
+  white-space:nowrap;padding:14px 26px;border-radius:14px}
+.txt.panel{background:rgba(248,241,226,.82)}
+.txt.sel{outline:2px dashed #2b8cff;outline-offset:3px}
+/* ---- landing drop ---- */
+#land{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  background:rgba(176,156,117,.6);z-index:120;text-align:center;color:#3a2b1e}
+#drop{width:min(560px,80%);padding:48px 30px;background:var(--paper);border:3px dashed #9c8763;border-radius:18px;
+  box-shadow:0 12px 40px rgba(0,0,0,.35);transform:rotate(-.6deg)}
+#drop h1{margin:.2em 0;font-size:30px}
+#drop p{color:var(--ink2);margin:.4em 0 1.2em}
+#tray{position:fixed;bottom:0;left:268px;right:0;height:0;overflow:hidden;background:rgba(58,43,30,.95);
+  transition:height .2s;display:flex;gap:6px;align-items:center;padding:0 10px;z-index:150}
+#tray.open{height:92px}
+.tw{position:relative;flex:0 0 auto}
+.tw img{height:72px;border-radius:4px;border:2px solid transparent;cursor:pointer}
+.tw.center img{border-color:var(--accent)}
+.tw .star{position:absolute;top:2px;left:4px;color:#ffd24a;font-size:14px;text-shadow:0 1px 2px #000;display:none}
+.tw.center .star{display:block}
+.tw .x{position:absolute;top:0;right:2px;color:#fff;background:#0008;border-radius:50%;width:18px;height:18px;
+  text-align:center;line-height:18px;font-size:12px;cursor:pointer}
+.toast{position:fixed;bottom:104px;left:50%;transform:translateX(-50%);background:#3a2b1e;color:#fff;
+  padding:9px 16px;border-radius:8px;z-index:300;font-size:14px;opacity:0;transition:.3s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="bar">
+  <span class="logo">📷 回憶拼貼<small>把大家的祝福，拼成一張</small></span>
+  <span class="sp"></span>
+  <span class="badge">🔒 照片只在你的瀏覽器處理，不會上傳</span>
+  <button class="tape-btn" onclick="addPhotos()">＋ 加照片</button>
+  <button class="tape-btn pink" onclick="relayout()">↻ 重新排版</button>
+  <button class="tape-btn go" onclick="exportPNG()">⬇ 匯出 PNG</button>
+</div>
+
+<div id="app">
+  <div id="side">
+    <h3>① 版面比例</h3>
+    <div class="row" id="ratioRow"></div>
+    <h3>② 中心人物</h3>
+    <div class="hint">在下方照片列點一張，設為中央大圖（再點一次取消）。</div>
+    <h3>③ 底圖</h3>
+    <div class="row" id="bgRow"></div>
+    <div class="hint">或 <label style="text-decoration:underline;cursor:pointer">上傳自己的底圖<input type="file" id="bgUp" accept="image/*" hidden></label></div>
+    <h3>④ 文字</h3>
+    <input class="fld" id="tTitle" placeholder="標題（例：億起精彩 · 十載同行）">
+    <input class="fld" id="tSub" placeholder="副標（例：因為有妳，讓這十年更精彩）">
+    <input class="fld" id="tSign" placeholder="落款（例：台南億載扶輪社 敬上）">
+    <div class="hint">文字會出現在畫面上，可直接拖到喜歡的位置。</div>
+    <h3>提示</h3>
+    <div class="hint">拖曳移動 · 滾輪縮放 · Shift+滾輪旋轉 · 點選置頂 · Delete 隱藏</div>
+  </div>
+
+  <div id="wrap">
+    <div id="stage"></div>
+    <div id="land">
+      <div id="drop">
+        <h1>把大家的祝福，拼成一張回憶 🌼</h1>
+        <p>上傳照片，自動排成「中心人物＋四周環繞」，拖一拖就完成。<br>照片全程留在你的裝置，不會上傳。</p>
+        <button class="tape-btn go" style="font-size:17px;padding:13px 26px" onclick="addPhotos()">選擇照片開始</button>
+        <p class="hint" style="color:#7a5b44;margin-top:14px">或把照片直接拖進這個視窗</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="tray"></div>
+<input type="file" id="fileIn" accept="image/*" multiple hidden>
+<div class="toast" id="toast"></div>
+
+<script>
+const RATIOS=[{k:'16:9 影片首頁',w:2400,h:1350},{k:'A4 海報',w:2480,h:1754},{k:'正方形',w:2000,h:2000},{k:'4:3',w:2400,h:1800}];
+let RW=2400,RH=1350;
+let photos=[]; // {id,img,aspect,el}
+let centerId=null, bgKey='none', bgImg=null, customBg=null, Z=1, sel=null;
+const stage=document.getElementById('stage'), tray=document.getElementById('tray');
+const BUILTIN_BG=['assets/bg/bg_1.png','assets/bg/bg_2.png','assets/bg/bg_3.png'];
+
+// ---- ratio chips ----
+const rr=document.getElementById('ratioRow');
+RATIOS.forEach((r,i)=>{const c=document.createElement('div');c.className='chip'+(i==0?' on':'');c.textContent=r.k;
+  c.onclick=()=>{[...rr.children].forEach(x=>x.classList.remove('on'));c.classList.add('on');RW=r.w;RH=r.h;layout();};rr.appendChild(c);});
+
+// ---- bg chips ----
+const bgRow=document.getElementById('bgRow');
+function bgChip(label,key,src){const im=document.createElement(src?'img':'div');
+  if(src){im.src=src;im.className='bgthumb'} else {im.className='bgthumb';im.style.display='flex';im.style.alignItems='center';im.style.justifyContent='center';im.style.fontSize='11px';im.textContent=label;im.style.color='#5a4632'}
+  im.title=label;im.onclick=()=>setBg(key,src,im);bgRow.appendChild(im);return im;}
+bgChip('無底圖','none',null).classList.add('on');
+BUILTIN_BG.forEach((s,i)=>bgChip('紙'+(i+1),'b'+i,s));
+function setBg(key,src,el){bgKey=key;[...bgRow.children].forEach(x=>x.classList.remove('on'));el.classList.add('on');
+  if(key==='none'){bgImg=null;stage.style.backgroundImage='';stage.style.background='var(--paper)';}
+  else if(key==='custom'){bgImg=customBg;stage.style.background='var(--paper)';stage.style.backgroundImage='url('+customBg.src+')';stage.style.backgroundSize='100% 100%';}
+  else {bgImg=new Image();bgImg.crossOrigin='anonymous';bgImg.src=src;stage.style.background='var(--paper)';stage.style.backgroundImage='url('+src+')';stage.style.backgroundSize='100% 100%';}
+}
+document.getElementById('bgUp').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{customBg=new Image();customBg.onload=()=>{let c=bgChip('自訂','custom',customBg.src);setBg('custom',customBg.src,c);};customBg.src=r.result;};r.readAsDataURL(f);};
+
+// ---- upload ----
+document.getElementById('fileIn').onchange=e=>handleFiles(e.target.files);
+function addPhotos(){document.getElementById('fileIn').click();}
+window.addEventListener('dragover',e=>e.preventDefault());
+window.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length)handleFiles(e.dataTransfer.files);});
+function handleFiles(fs){let arr=[...fs].filter(f=>f.type.startsWith('image/'));let left=arr.length;if(!left)return;
+  arr.forEach(f=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{
+    photos.push({id:'p'+Math.round(performance.now()*1000+Math.random()*1000),img:im,aspect:im.naturalWidth/im.naturalHeight});
+    if(--left===0){document.getElementById('land').style.display='none';buildTray();layout();}
+  };im.src=r.result;};r.readAsDataURL(f);});}
+
+// ---- tray ----
+function buildTray(){tray.innerHTML='';tray.classList.add('open');
+  photos.forEach(p=>{const w=document.createElement('div');w.className='tw'+(p.id===centerId?' center':'');
+    const im=document.createElement('img');im.src=p.img.src;im.title='點一下設為中心';
+    im.onclick=()=>{centerId=(centerId===p.id?null:p.id);buildTray();layout();};
+    const st=document.createElement('span');st.className='star';st.textContent='★';
+    const x=document.createElement('span');x.className='x';x.textContent='×';
+    x.onclick=ev=>{ev.stopPropagation();photos=photos.filter(q=>q.id!==p.id);if(centerId===p.id)centerId=null;buildTray();layout();if(!photos.length){document.getElementById('land').style.display='flex';tray.classList.remove('open');}};
+    w.append(im,st,x);tray.appendChild(w);});}
+
+// ---- layout (90% scrapbook frame) ----
+function rnd(a,b){return a+Math.random()*(b-a);}
+function layout(){
+  stage.style.width=RW+'px';stage.style.height=RH+'px';
+  [...stage.querySelectorAll('.ph')].forEach(e=>e.remove());
+  const frame=photos.filter(p=>p.id!==centerId);
+  const center=photos.find(p=>p.id===centerId);
+  const bt=RH*.16,bb=RH*.14,bl=RW*.20,br=RW*.20,cW=RW-bl-br,cH=RH-bt-bb;
+  const ids=frame.slice();for(let i=ids.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[ids[i],ids[j]]=[ids[j],ids[i]];}
+  const n=ids.length,q=(n/4)|0,r=n%4;
+  const top=ids.slice(0,q+r),bot=ids.slice(q+r,2*q+r),lf=ids.slice(2*q+r,3*q+r),rt=ids.slice(3*q+r);
+  const place=(p,cx,cy,w,h,rot)=>{const bw=Math.max(6,Math.min(w,h)*0.05);mkPh(p,cx-w/2-bw,cy-h/2-bw,w+2*bw,h+2*bw,bw,rot);};
+  const sh=(x0,y0,Wb,Hb,a,rows=2)=>{const per=Math.ceil(a.length/rows);for(let R=0;R<rows;R++){const ri=a.slice(R*per,(R+1)*per);
+    ri.forEach((p,i)=>{const cx=x0+Wb*((i+.5)/Math.max(1,ri.length))+rnd(-7,7),cy=y0+Hb*((R+.5)/rows)+rnd(-6,6);
+      const hh=Hb/rows*1.55*rnd(.97,1.04);place(p,cx,cy,hh*p.aspect,hh,rnd(-5,5));});}};
+  const sv=(x0,y0,Wb,Hb,a,cols=2)=>{const per=Math.ceil(a.length/cols);for(let C=0;C<cols;C++){const ci=a.slice(C*per,(C+1)*per);
+    ci.forEach((p,i)=>{const cx=x0+Wb*((C+.5)/cols)+rnd(-7,7),cy=y0+Hb*((i+.5)/Math.max(1,ci.length))+rnd(-8,8);
+      const ww=Wb/cols*1.5*rnd(.97,1.04);place(p,cx,cy,ww,ww/p.aspect,rnd(-5,5));});}};
+  sh(0,0,RW,bt,top);sh(0,RH-bb,RW,bb,bot);sv(0,bt-40,bl,cH+80,lf);sv(RW-br,bt-40,br,cH+80,rt);
+  if(center){const hw=cW*.6,hh=hw/center.aspect;place(center,RW/2,bt+cH/2,hw,hh,-1);}
+  // text overlays (recreate)
+  [...stage.querySelectorAll('.txt')].forEach(e=>e.remove());
+  fit();
+}
+function mkPh(p,x,y,w,h,bw,rot){const d=document.createElement('div');d.className='ph';
+  d.style.left=x+'px';d.style.top=y+'px';d.style.width=w+'px';d.style.height=h+'px';
+  d.style.padding=bw+'px';d.dataset.rot=rot;d.style.transform='rotate('+rot+'deg)';d.style.zIndex=(p.id===centerId?8000:++Z);
+  const im=document.createElement('img');im.src=p.img.src;d.appendChild(im);stage.appendChild(d);bindDrag(d);p.el=d;}
+
+// ---- text elements ----
+function syncText(){
+  ['tTitle','tSub','tSign'].forEach((id,i)=>{
+    const v=document.getElementById(id).value.trim();
+    let el=stage.querySelector('.txt[data-t="'+id+'"]');
+    if(!v){if(el)el.remove();return;}
+    if(!el){el=document.createElement('div');el.className='txt'+(id!=='tSub'?' panel':'');el.dataset.t=id;el.contentEditable=false;
+      el.dataset.rot=0;el.style.zIndex=9500;el.dataset.fresh='1';
+      el.style.top=(id==='tTitle'?RH*0.06:id==='tSub'?RH*0.18:RH*0.82)+'px';
+      stage.appendChild(el);bindDrag(el);}
+    el.style.fontFamily="'LXGW',serif";
+    if(id==='tTitle'){el.style.fontSize=Math.round(RW*0.052)+'px';el.style.color='#3a2b1e';el.dataset.size=Math.round(RW*0.052);el.dataset.col='#3a2b1e';}
+    if(id==='tSub'){el.style.fontSize=Math.round(RW*0.02)+'px';el.style.color='#fff';el.style.background='#c2986a';el.dataset.size=Math.round(RW*0.02);el.dataset.col='#fff';el.dataset.bg='#c2986a';}
+    if(id==='tSign'){el.style.fontSize=Math.round(RW*0.024)+'px';el.style.color='#4a3326';el.dataset.size=Math.round(RW*0.024);el.dataset.col='#4a3326';}
+    el.textContent=v;el.dataset.text=v;
+    if(el.dataset.fresh){el.dataset.fresh='';el.style.left=Math.max(20,(RW-el.offsetWidth)/2)+'px';}
+  });
+}
+['tTitle','tSub','tSign'].forEach(id=>document.getElementById(id).addEventListener('input',syncText));
+
+// ---- drag / wheel ----
+function selectEl(d){if(sel)sel.classList.remove('sel');sel=d;d.classList.add('sel');if(!d.classList.contains('txt'))d.style.zIndex=++Z;}
+function bindDrag(d){
+  const start=(cx,cy)=>{selectEl(d);const s=+stage.dataset.s||1;const ox=parseFloat(d.style.left),oy=parseFloat(d.style.top);
+    return(nx,ny)=>{d.style.left=(ox+(nx-cx)/s)+'px';d.style.top=(oy+(ny-cy)/s)+'px';};};
+  d.addEventListener('mousedown',e=>{e.preventDefault();const mv=start(e.clientX,e.clientY);
+    const m=ev=>mv(ev.clientX,ev.clientY);const u=()=>{removeEventListener('mousemove',m);removeEventListener('mouseup',u);};
+    addEventListener('mousemove',m);addEventListener('mouseup',u);});
+  d.addEventListener('touchstart',e=>{const t=e.touches[0];const mv=start(t.clientX,t.clientY);
+    const m=ev=>{mv(ev.touches[0].clientX,ev.touches[0].clientY);ev.preventDefault();};
+    const u=()=>{removeEventListener('touchmove',m);removeEventListener('touchend',u);};
+    addEventListener('touchmove',m,{passive:false});addEventListener('touchend',u);},{passive:false});
+  d.addEventListener('wheel',e=>{e.preventDefault();selectEl(d);
+    if(e.shiftKey){let r=(+d.dataset.rot||0)+(e.deltaY>0?2:-2);d.dataset.rot=r;d.style.transform='rotate('+r+'deg)';}
+    else{const f=e.deltaY>0?.96:1.04;
+      if(d.classList.contains('txt')){const ns=(+d.dataset.size)*f;d.dataset.size=ns;d.style.fontSize=ns+'px';}
+      else{const w=parseFloat(d.style.width)*f,h=parseFloat(d.style.height)*f,
+        cx=parseFloat(d.style.left)+parseFloat(d.style.width)/2,cy=parseFloat(d.style.top)+parseFloat(d.style.height)/2;
+        d.style.width=w+'px';d.style.height=h+'px';d.style.left=(cx-w/2)+'px';d.style.top=(cy-h/2)+'px';
+        d.style.padding=Math.max(6,Math.min(w,h)*0.05)+'px';}}
+  },{passive:false});
+}
+addEventListener('keydown',e=>{if(e.key==='Delete'&&sel){sel.style.display='none';}});
+
+// ---- fit ----
+function fit(){const w=document.getElementById('wrap');
+  const s=Math.min((w.clientWidth-48)/RW,(w.clientHeight-48)/RH,1);
+  stage.style.transform='scale('+s+')';stage.dataset.s=s;}
+addEventListener('resize',fit);
+
+function relayout(){if(photos.length)layout();syncText();}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+// ---- export ----
+async function exportPNG(){
+  if(!photos.length){toast('先加幾張照片吧');return;}
+  await document.fonts.load("60px 'LXGW'").catch(()=>{});
+  const SC=2,cv=document.createElement('canvas');cv.width=RW*SC;cv.height=RH*SC;
+  const ctx=cv.getContext('2d');ctx.scale(SC,SC);
+  ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--paper')||'#efe6d2';ctx.fillRect(0,0,RW,RH);
+  if(bgImg&&bgImg.complete)ctx.drawImage(bgImg,0,0,RW,RH);
+  const els=[...stage.children].filter(d=>(d.classList.contains('ph')||d.classList.contains('txt'))&&d.style.display!=='none')
+    .sort((a,b)=>(+a.style.zIndex||0)-(+b.style.zIndex||0));
+  for(const d of els){
+    const x=parseFloat(d.style.left),y=parseFloat(d.style.top),
+      w=parseFloat(d.style.width)||0,rot=(+d.dataset.rot||0)*Math.PI/180;
+    if(d.classList.contains('ph')){
+      const h=parseFloat(d.style.height),b=parseFloat(d.style.padding)||0;
+      ctx.save();ctx.translate(x+w/2,y+h/2);ctx.rotate(rot);
+      ctx.shadowColor='rgba(40,28,18,.4)';ctx.shadowBlur=11;ctx.shadowOffsetX=2;ctx.shadowOffsetY=5;
+      ctx.fillStyle='#fffdf7';ctx.fillRect(-w/2,-h/2,w,h);ctx.shadowColor='transparent';
+      const im=d.querySelector('img');ctx.drawImage(im,-w/2+b,-h/2+b,w-2*b,h-2*b);ctx.restore();
+    }else{ // text
+      const size=+d.dataset.size,col=d.dataset.col,bg=d.dataset.bg,text=d.dataset.text||'';
+      ctx.save();ctx.font=size+"px 'LXGW',serif";const tw=ctx.measureText(text).width;
+      const cx=x+ (parseFloat(d.style.width)||tw)/2, padX=26,padY=14;
+      const bx=cx-tw/2-padX,by=y, bw2=tw+padX*2, bh=size*1.25+padY*2;
+      ctx.translate(bx+bw2/2,by+bh/2);ctx.rotate(rot);
+      if(bg){ctx.fillStyle=bg;roundRect(ctx,-bw2/2,-bh/2,bw2,bh,12);ctx.fill();}
+      else if(d.classList.contains('panel')){ctx.fillStyle='rgba(248,241,226,.82)';roundRect(ctx,-bw2/2,-bh/2,bw2,bh,14);ctx.fill();}
+      ctx.fillStyle=col;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,0,2);ctx.restore();
+    }
+  }
+  cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='回憶拼貼.png';a.click();toast('已匯出 回憶拼貼.png 🎉');},'image/png');
+}
+function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+fit();
+</script>
+</body>
+</html>

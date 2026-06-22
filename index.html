@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>回憶拼貼 · 把大家的祝福拼成一張</title>
 <style>
-@font-face{font-family:'LXGW';src:url('assets/font/LXGW.ttf') format('truetype');font-display:swap;}
+@font-face{font-family:'LXGW';src:url('assets/font/LXGW.woff2') format('woff2');font-display:swap;}
 :root{
   --kraft:#c9b896; --kraft-d:#b3a079; --paper:#efe6d2; --ink:#4a3326; --ink2:#7a5b44;
   --tape:#d9c7a0; --tape2:#e7b9b0; --accent:#bb6b4e; --sage:#9aa885;
@@ -113,7 +113,8 @@ body{
         <h1>把大家的祝福，拼成一張回憶 🌼</h1>
         <p>上傳照片，自動排成「中心人物＋四周環繞」，拖一拖就完成。<br>照片全程留在你的裝置，不會上傳。</p>
         <button class="tape-btn go" style="font-size:17px;padding:13px 26px" onclick="addPhotos()">選擇照片開始</button>
-        <p class="hint" style="color:#7a5b44;margin-top:14px">或把照片直接拖進這個視窗</p>
+        <button class="tape-btn" style="font-size:15px;padding:12px 20px;margin-left:8px" onclick="loadSamples()">✨ 一鍵試玩（範例照片）</button>
+        <p class="hint" style="color:#7a5b44;margin-top:14px">或把照片直接拖進這個視窗 · 照片不會上傳</p>
       </div>
     </div>
   </div>
@@ -153,6 +154,16 @@ document.getElementById('bgUp').onchange=e=>{const f=e.target.files[0];if(!f)ret
 // ---- upload ----
 document.getElementById('fileIn').onchange=e=>handleFiles(e.target.files);
 function addPhotos(){document.getElementById('fileIn').click();}
+function loadSamples(){
+  const srcs=['assets/samples/center.jpg'];
+  for(let i=0;i<12;i++)srcs.push('assets/samples/s'+String(i).padStart(2,'0')+'.jpg');
+  let left=srcs.length;
+  srcs.forEach((s,i)=>{const im=new Image();im.onload=()=>{
+    const id='s'+i;photos.push({id,img:im,aspect:im.naturalWidth/im.naturalHeight});
+    if(i===0)centerId=id;
+    if(--left===0){document.getElementById('land').style.display='none';buildTray();layout();}
+  };im.onerror=()=>{if(--left===0){document.getElementById('land').style.display='none';buildTray();layout();}};im.src=s;});
+}
 window.addEventListener('dragover',e=>e.preventDefault());
 window.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length)handleFiles(e.dataTransfer.files);});
 function handleFiles(fs){let arr=[...fs].filter(f=>f.type.startsWith('image/'));let left=arr.length;if(!left)return;
@@ -185,10 +196,10 @@ function layout(){
   const place=(p,cx,cy,w,h,rot)=>{const bw=Math.max(6,Math.min(w,h)*0.05);mkPh(p,cx-w/2-bw,cy-h/2-bw,w+2*bw,h+2*bw,bw,rot);};
   const sh=(x0,y0,Wb,Hb,a,rows=2)=>{const per=Math.ceil(a.length/rows);for(let R=0;R<rows;R++){const ri=a.slice(R*per,(R+1)*per);
     ri.forEach((p,i)=>{const cx=x0+Wb*((i+.5)/Math.max(1,ri.length))+rnd(-7,7),cy=y0+Hb*((R+.5)/rows)+rnd(-6,6);
-      const hh=Hb/rows*1.55*rnd(.97,1.04);place(p,cx,cy,hh*p.aspect,hh,rnd(-5,5));});}};
+      const hh=Hb/rows*1.7*rnd(.96,1.05);place(p,cx,cy,hh*p.aspect,hh,rnd(-4.5,4.5));});}};
   const sv=(x0,y0,Wb,Hb,a,cols=2)=>{const per=Math.ceil(a.length/cols);for(let C=0;C<cols;C++){const ci=a.slice(C*per,(C+1)*per);
     ci.forEach((p,i)=>{const cx=x0+Wb*((C+.5)/cols)+rnd(-7,7),cy=y0+Hb*((i+.5)/Math.max(1,ci.length))+rnd(-8,8);
-      const ww=Wb/cols*1.5*rnd(.97,1.04);place(p,cx,cy,ww,ww/p.aspect,rnd(-5,5));});}};
+      const ww=Wb/cols*1.62*rnd(.96,1.05);place(p,cx,cy,ww,ww/p.aspect,rnd(-4.5,4.5));});}};
   sh(0,0,RW,bt,top);sh(0,RH-bb,RW,bb,bot);sv(0,bt-40,bl,cH+80,lf);sv(RW-br,bt-40,br,cH+80,rt);
   if(center){const hw=cW*.6,hh=hw/center.aspect;place(center,RW/2,bt+cH/2,hw,hh,-1);}
   // text overlays (recreate)

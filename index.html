@@ -52,6 +52,10 @@ body{
 .ph{position:absolute;cursor:grab;background:#fffdf7;box-shadow:2px 5px 11px rgba(40,28,18,.4);user-select:none;touch-action:none}
 .ph img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
 .ph.sel{outline:3px solid #2b8cff;outline-offset:2px;z-index:9000!important}
+.ph.deco{background:transparent!important;box-shadow:none!important;padding:0!important}
+.ph.deco img{object-fit:contain}
+.decothumb{width:54px;height:54px;object-fit:contain;background:#5e4733;border:1px solid #836a4d;border-radius:7px;padding:4px;cursor:pointer}
+.decothumb:hover{border-color:var(--accent)}
 .txt{position:absolute;cursor:grab;user-select:none;touch-action:none;text-align:center;line-height:1.25;
   white-space:nowrap;padding:14px 26px;border-radius:14px}
 .txt.panel{background:rgba(248,241,226,.82)}
@@ -102,6 +106,9 @@ body{
     <input class="fld" id="tSub" placeholder="副標（例：因為有妳，讓這十年更精彩）">
     <input class="fld" id="tSign" placeholder="落款（例：台南億載扶輪社 敬上）">
     <div class="hint">文字會出現在畫面上，可直接拖到喜歡的位置。</div>
+    <h3>⑤ 裝飾貼圖</h3>
+    <div class="row" id="decoRow"></div>
+    <div class="hint">點一下把貼圖加到畫面，再拖到喜歡的位置（滾輪縮放、Shift+滾輪旋轉）。</div>
     <h3>提示</h3>
     <div class="hint">拖曳移動 · 滾輪縮放 · Shift+滾輪旋轉 · 點選置頂 · Delete 隱藏</div>
   </div>
@@ -171,6 +178,20 @@ function handleFiles(fs){let arr=[...fs].filter(f=>f.type.startsWith('image/'));
     photos.push({id:'p'+Math.round(performance.now()*1000+Math.random()*1000),img:im,aspect:im.naturalWidth/im.naturalHeight});
     if(--left===0){document.getElementById('land').style.display='none';buildTray();layout();}
   };im.src=r.result;};r.readAsDataURL(f);});}
+
+// ---- deco stickers ----
+function loadDecos(){fetch('assets/deco/manifest.json').then(r=>r.json()).then(list=>{
+  const row=document.getElementById('decoRow');row.innerHTML='';
+  list.forEach(n=>{const im=document.createElement('img');im.src='assets/deco/'+n;im.className='decothumb';
+    im.title='點一下加到畫面';im.onclick=()=>addDeco('assets/deco/'+n);row.appendChild(im);});
+}).catch(()=>{document.getElementById('decoRow').innerHTML='<span class="hint">（貼圖載入失敗）</span>';});}
+function addDeco(src){const im=new Image();im.onload=()=>{
+  const w=300,h=w/(im.naturalWidth/im.naturalHeight);
+  const d=document.createElement('div');d.className='ph deco';d.dataset.deco='1';d.dataset.rot=0;
+  d.style.left=(RW/2-w/2)+'px';d.style.top=(RH/2-h/2)+'px';d.style.width=w+'px';d.style.height=h+'px';
+  d.style.padding='0';d.style.transform='rotate(0deg)';d.style.zIndex=9800;
+  const g=document.createElement('img');g.src=src;d.appendChild(g);stage.appendChild(d);bindDrag(d);selectEl(d);
+};im.src=src;}
 
 // ---- tray ----
 function buildTray(){tray.innerHTML='';tray.classList.add('open');
@@ -280,9 +301,14 @@ async function exportPNG(){
     if(d.classList.contains('ph')){
       const h=parseFloat(d.style.height),b=parseFloat(d.style.padding)||0;
       ctx.save();ctx.translate(x+w/2,y+h/2);ctx.rotate(rot);
-      ctx.shadowColor='rgba(40,28,18,.4)';ctx.shadowBlur=11;ctx.shadowOffsetX=2;ctx.shadowOffsetY=5;
-      ctx.fillStyle='#fffdf7';ctx.fillRect(-w/2,-h/2,w,h);ctx.shadowColor='transparent';
-      const im=d.querySelector('img');ctx.drawImage(im,-w/2+b,-h/2+b,w-2*b,h-2*b);ctx.restore();
+      if(d.dataset.deco){ // 透明貼圖：直接畫，無白框
+        ctx.drawImage(d.querySelector('img'),-w/2,-h/2,w,h);
+      }else{
+        ctx.shadowColor='rgba(40,28,18,.4)';ctx.shadowBlur=11;ctx.shadowOffsetX=2;ctx.shadowOffsetY=5;
+        ctx.fillStyle='#fffdf7';ctx.fillRect(-w/2,-h/2,w,h);ctx.shadowColor='transparent';
+        ctx.drawImage(d.querySelector('img'),-w/2+b,-h/2+b,w-2*b,h-2*b);
+      }
+      ctx.restore();
     }else{ // text
       const size=+d.dataset.size,col=d.dataset.col,bg=d.dataset.bg,text=d.dataset.text||'';
       ctx.save();ctx.font=size+"px 'LXGW',serif";const tw=ctx.measureText(text).width;
@@ -297,7 +323,7 @@ async function exportPNG(){
   cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='回憶拼貼.png';a.click();toast('已匯出 回憶拼貼.png 🎉');},'image/png');
 }
 function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
-fit();
+loadDecos();fit();
 </script>
 </body>
 </html>
